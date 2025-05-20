@@ -1,25 +1,35 @@
-import logo from './logo.svg';
-import './App.css';
+import { useEffect, useState } from "react";
+import { initDB } from "./db";
+import PatientForm from "./components/PatientForm";
+import PatientList from "./components/PatientList";
+import SqlQuery from "./components/SqlQuery";
+import "./App.css";
 
-function App() {
+export default function App() {
+  const [refresh, setRefresh] = useState(0);
+
+  useEffect(() => {
+    initDB().catch(console.error);
+  }, []);
+
+  const handlePatientAdded = () => {
+    setRefresh((prev) => prev + 1);
+  };
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
+    <div className="app">
+      <header>
+        <h1>Patient Registration System</h1>
       </header>
+      <main>
+        <div className="left-panel">
+          <PatientForm onPatientAdded={handlePatientAdded} />
+        </div>
+        <div className="right-panel">
+          <PatientList refresh={refresh} />
+          <SqlQuery onQueryExecuted={() => setRefresh((prev) => prev + 1)} />
+        </div>
+      </main>
     </div>
   );
 }
-
-export default App;
