@@ -2,7 +2,7 @@ import { useState } from "react";
 import { queryDB } from "../db";
 
 export default function SqlQuery({ onQueryExecuted }) {
-  const [sql, setSql] = useState("SELECT * FROM patients LIMIT 10");
+  const [sql, setSql] = useState("");
   const [results, setResults] = useState(null);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);

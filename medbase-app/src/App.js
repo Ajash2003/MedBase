@@ -10,6 +10,17 @@ export default function App() {
 
   useEffect(() => {
     initDB().catch(console.error);
+    
+    // Listen for database updates from other tabs
+    const handleDatabaseUpdate = () => {
+      setRefresh((prev) => prev + 1);
+    };
+    
+    window.addEventListener("databaseUpdate", handleDatabaseUpdate);
+    
+    return () => {
+      window.removeEventListener("databaseUpdate", handleDatabaseUpdate);
+    };
   }, []);
 
   const handlePatientAdded = () => {
@@ -19,7 +30,8 @@ export default function App() {
   return (
     <div className="app">
       <header>
-        <h1>Patient Registration System</h1>
+        {/* <img src="Desktop/MedBase/medbase-app/public/MedBase.png" alt=""></img> */}
+        <h1>MedBase</h1>
       </header>
       <main>
         <div className="left-panel">
