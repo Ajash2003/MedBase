@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { queryDB } from '../db';
-// import './PatientForm.css';
 
 export default function PatientForm() {
   const [formData, setFormData] = useState({
