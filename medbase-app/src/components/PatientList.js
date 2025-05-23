@@ -1,149 +1,144 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { queryDB } from '../db';
 import './PatientList.css';
-
-// Helper function to format phone numbers
-const formatPhone = (phone) => {
-  if (!phone || phone.length !== 10) return phone;
-  return `(${phone.slice(0, 3)}) ${phone.slice(3, 6)}-${phone.slice(6)}`;
-};
-
-// Helper function to calculate age from date of birth
-const calculateAge = (dob) => {
-  const birthDate = new Date(dob);
-  const today = new Date();
-  let age = today.getFullYear() - birthDate.getFullYear();
-  const monthDiff = today.getMonth() - birthDate.getMonth();
-  
-  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-    age--;
-  }
-  
-  return age;
-};
 
 export default function PatientList() {
   const [patients, setPatients] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedPatient, setSelectedPatient] = useState(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchPatients = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        const result = await queryDB(
-          `SELECT * FROM patients ORDER BY created_at DESC`
-        );
-        setPatients(result.rows);
-      } catch (err) {
-        setError('Failed to load patient data. Please try again.');
-        console.error('Error fetching patients:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchPatients();
   }, []);
 
-  const filteredPatients = patients.filter(patient => {
-    const searchLower = searchTerm.toLowerCase();
-    return (
-      patient.first_name.toLowerCase().includes(searchLower) ||
-      patient.last_name.toLowerCase().includes(searchLower) ||
-      patient.phone?.includes(searchTerm) ||
-      patient.email?.toLowerCase().includes(searchLower)
-    );
-  });
+  const fetchPatients = async () => {
+    try {
+      setLoading(true);
+      const result = await queryDB('SELECT * FROM patients ORDER BY created_at DESC');
+      setPatients(result.rows);
+    } catch (err) {
+      setError('Failed to load patients');
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  if (loading) return (
-    <div className="loading-container">
-      <i className="fas fa-spinner fa-spin"></i>
-      <p>Loading patients...</p>
-    </div>
-  );
+  const handleDelete = async (id, e) => {
+    e.stopPropagation();
+    if (!window.confirm('Are you sure you want to delete this patient?')) return;
+    
+    try {
+      await queryDB('DELETE FROM patients WHERE id = $1', [id]);
+      fetchPatients();
+      if (selectedPatient?.id === id) setSelectedPatient(null);
+    } catch (err) {
+      alert('Failed to delete patient');
+      console.error(err);
+    }
+  };
 
-  if (error) return (
-    <div className="error-container">
-      <i className="fas fa-exclamation-triangle"></i>
-      <p>{error}</p>
-      <button onClick={() => window.location.reload()}>
-        <i className="fas fa-sync-alt"></i> Retry
-      </button>
-    </div>
-  );
+  const handleEdit = (patient, e) => {
+    e.stopPropagation();
+    navigate('/register', { state: { patient } });
+  };
+
+  const handleRowClick = (patient) => {
+    setSelectedPatient(selectedPatient?.id === patient.id ? null : patient);
+  };
+
+  if (loading) return <div className="loading">Loading patients...</div>;
+  if (error) return <div className="error">{error}</div>;
 
   return (
-    <div className="card">
-      <div className="patient-list-header">
-        <h2>Patient Records</h2>
-        <div className="search-container">
-          <i className="fas fa-search"></i>
-          <input
-            type="text"
-            placeholder="Search patients..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </div>
-      </div>
-
-      {filteredPatients.length === 0 ? (
-        <div className="no-results">
-          <i className="fas fa-user-slash"></i>
-          <p>No patients found</p>
-        </div>
-      ) : (
-        <div className="table-container">
-          <table>
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Name</th>
-                <th>Age</th>
-                <th>Gender</th>
-                <th>Contact</th>
-                <th>Registered</th>
+    <div className="patient-database">
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Date of Birth</th>
+            <th>Gender</th>
+            <th>Contact</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {patients.map(patient => (
+            <>
+              <tr 
+                key={patient.id} 
+                onClick={() => handleRowClick(patient)}
+                className={selectedPatient?.id === patient.id ? 'selected' : ''}
+              >
+                <td>{patient.id}</td>
+                <td>{patient.first_name} {patient.last_name}</td>
+                <td>{new Date(patient.date_of_birth).toLocaleDateString()}</td>
+                <td>{patient.gender}</td>
+                <td>
+                  {patient.phone && <div><i className="fas fa-phone"></i> {patient.phone}</div>}
+                  {patient.email && <div><i className="fas fa-envelope"></i> {patient.email}</div>}
+                </td>
+                <td className="actions">
+                  <button 
+                    className="edit-btn"
+                    onClick={(e) => handleEdit(patient, e)}
+                  >
+                    <i className="fas fa-edit"></i> 
+                  </button>
+                  &nbsp;
+                  <button 
+                    className="delete-btn"
+                    onClick={(e) => handleDelete(patient.id, e)}
+                  >
+                    <i className="fas fa-trash-alt"></i> 
+                  </button>
+                </td>
               </tr>
-            </thead>
-            <tbody>
-              {filteredPatients.map((patient) => (
-                <tr key={patient.id}>
-                  <td>{patient.id}</td>
-                  <td>
-                    {patient.first_name} {patient.last_name}
-                  </td>
-                  <td>{calculateAge(patient.date_of_birth)}</td>
-                  <td>{patient.gender}</td>
-                  <td>
-                    {patient.phone && (
-                      <div className="contact-item">
-                        <i className="fas fa-phone"></i>
-                        <span>{formatPhone(patient.phone)}</span>
+              {selectedPatient?.id === patient.id && (
+                <tr className="details-row">
+                  <td colSpan="6">
+                    <div className="patient-details">
+                      <h3>Patient Details</h3>
+                      <div className="details-grid">
+                        <div>
+                          <strong>ID:</strong> {patient.id}
+                        </div>
+                        <div>
+                          <strong>Full Name:</strong> {patient.first_name} {patient.last_name}
+                        </div>
+                        <div>
+                          <strong>Date of Birth:</strong> {new Date(patient.date_of_birth).toLocaleDateString()}
+                        </div>
+                        <div>
+                          <strong>Gender:</strong> {patient.gender}
+                        </div>
+                        {patient.address && (
+                          <div>
+                            <strong>Address:</strong> {patient.address}
+                          </div>
+                        )}
+                        <div>
+                          <strong>Phone:</strong> {patient.phone || 'N/A'}
+                        </div>
+                        <div>
+                          <strong>Email:</strong> {patient.email || 'N/A'}
+                        </div>
+                        <div>
+                          <strong>Registered On:</strong> {new Date(patient.created_at).toLocaleString()}
+                        </div>
                       </div>
-                    )}
-                    {patient.email && (
-                      <div className="contact-item">
-                        <i className="fas fa-envelope"></i>
-                        <span>{patient.email}</span>
-                      </div>
-                    )}
-                  </td>
-                  <td>
-                    {new Date(patient.created_at).toLocaleDateString('en-US', {
-                      year: 'numeric',
-                      month: 'short',
-                      day: 'numeric'
-                    })}
+                    </div>
                   </td>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+              )}
+            </>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 }

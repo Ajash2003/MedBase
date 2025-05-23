@@ -1,15 +1,20 @@
+import { useLocation } from 'react-router-dom';
 import PatientForm from '../components/PatientForm';
-import './Page.css';
 
 export default function RegistrationPage() {
+  const location = useLocation();
+  const patient = location.state?.patient;
+
+
   return (
-    <div className="page-container">
+    <div className="registration-page">
       <div className="page-header">
         <h1 className="page-title">
-          <i className="fas fa-user-plus"></i> Patient Registration
+          <i className="fas fa-user-plus"></i> 
+          {patient ? 'Edit Patient Details' : 'Register Patient'}
         </h1>
       </div>
-      <PatientForm />
+      <PatientForm patient={patient} />
     </div>
   );
 }

@@ -20,15 +20,7 @@
   min-height: 100vh;
 }
 
-.main-content {
-  flex: 1;
-  margin-left: var(--sidebar-width);
-  padding: 2rem;
-  background-color: #f5f7fa;
-  min-height: 100vh;
-}
 
-/* Card styles */
 .card {
   background: white;
   border-radius: 10px;
@@ -37,10 +29,32 @@
   margin-bottom: 2rem;
 }
 
-/* Responsive adjustments */
+.main-content {
+  flex: 1;
+  margin-left: 250px; 
+  padding: 2rem;
+  background-color: #f5f7fa;
+  min-height: 100vh;
+  transition: margin-left 0.3s ease;
+}
+
+.sidebar.collapsed ~ .main-content {
+  margin-left: 60px; 
+}
+
 @media (max-width: 768px) {
-  .main-content {
-    margin-left: var(--sidebar-collapsed);
-    padding: 1rem;
+  .sidebar:not(.collapsed) {
+    width: 100%;
+    z-index: 1000;
+  }
+  
+  .sidebar:not(.collapsed) ~ .main-content {
+    margin-left: 0;
+    opacity: 0.3;
+    pointer-events: none;
+  }
+  
+  .collapse-btn {
+    display: block;
   }
 }
