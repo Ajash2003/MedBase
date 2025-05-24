@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
 import { queryDB } from '../db';
+import { useNavigate } from 'react-router-dom';
 
-export default function PatientForm({ patient }) {
+
+export default function PatientForm({ patient, onSuccess }) {  // Add onSuccess prop
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -9,14 +11,16 @@ export default function PatientForm({ patient }) {
     gender: '',
     address: '',
     phone: '',
-    email: ''
+    email: '',
+    department: ''
   });
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
+  const navigate = useNavigate();
+
 
   useEffect(() => {
     if (patient) {
-      // Format the date for the date input (YYYY-MM-DD)
       const formattedDate = patient.date_of_birth 
         ? new Date(patient.date_of_birth).toISOString().split('T')[0]
         : '';
@@ -28,10 +32,10 @@ export default function PatientForm({ patient }) {
         gender: patient.gender,
         address: patient.address || '',
         phone: patient.phone || '',
-        email: patient.email || ''
+        email: patient.email || '',
+        department: patient.department
       });
     } else {
-      // Clear form when switching to new patient mode
       setFormData({
         firstName: '',
         lastName: '',
@@ -39,9 +43,9 @@ export default function PatientForm({ patient }) {
         gender: '',
         address: '',
         phone: '',
-        email: ''
+        email: '',
+        department: ''
       });
-      setErrors({});
     }
   }, [patient]);
 
@@ -70,80 +74,89 @@ export default function PatientForm({ patient }) {
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    
-    const phoneError = validatePhone(formData.phone);
-    const dateError = validateDate(formData.dateOfBirth);
-    
-    if (phoneError || dateError) {
-      setErrors({
-        phone: phoneError,
-        dateOfBirth: dateError
-      });
-      return;
-    }
+  e.preventDefault();
+  
+  // Validate inputs
+  const phoneError = validatePhone(formData.phone);
+  const dateError = validateDate(formData.dateOfBirth);
+  
+  if (phoneError || dateError) {
+    setErrors({
+      phone: phoneError,
+      dateOfBirth: dateError
+    });
+    return;
+  }
 
-    setLoading(true);
-    
-    try {
-      if (patient) {
-        // Update existing patient
-        await queryDB(
-          `UPDATE patients SET 
-            first_name = $1, 
-            last_name = $2, 
-            date_of_birth = $3, 
-            gender = $4, 
-            address = $5, 
-            phone = $6, 
-            email = $7 
-           WHERE id = $8`,
-          [
-            formData.firstName,
-            formData.lastName,
-            formData.dateOfBirth,
-            formData.gender,
-            formData.address,
-            formData.phone,
-            formData.email,
-            patient.id
-          ]
-        );
-        alert('Patient updated successfully!');
-      } else {
-        // Create new patient
-        await queryDB(
-          `INSERT INTO patients (first_name, last_name, date_of_birth, gender, address, phone, email)
-           VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-          [
-            formData.firstName,
-            formData.lastName,
-            formData.dateOfBirth,
-            formData.gender,
-            formData.address,
-            formData.phone,
-            formData.email,
-          ]
-        );
-        alert('Patient registered successfully!');
-        // Clear form after successful registration
-        setFormData({
-          firstName: '',
-          lastName: '',
-          dateOfBirth: '',
-          gender: '',
-          address: '',
-          phone: '',
-          email: ''
-        });
-      }
-    } catch (err) {
-      alert(patient ? 'Failed to update patient' : 'Failed to register patient');
-      console.error(err);
-    } finally {
-      setLoading(false);
+  setLoading(true);
+  
+  try {
+    if (patient) {
+      // Debug log before update
+      console.log('Updating patient with data:', formData);
+      
+      await queryDB(
+        `UPDATE patients SET 
+          first_name = $1, 
+          last_name = $2, 
+          date_of_birth = $3, 
+          gender = $4, 
+          address = $5, 
+          phone = $6, 
+          email = $7,
+          department = $8
+         WHERE id = $9`,
+        [
+          formData.firstName,
+          formData.lastName,
+          formData.dateOfBirth,
+          formData.gender,
+          formData.address,
+          formData.phone,
+          formData.email,
+          formData.department,
+          patient.id
+        ]
+      );
+      alert('Patient updated successfully!');
+    } else {
+      // Debug log before insert
+      console.log('Inserting new patient with data:', formData);
+      
+      await queryDB(
+        `INSERT INTO patients 
+          (first_name, last_name, date_of_birth, gender, address, phone, email, department)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+        [
+          formData.firstName,
+          formData.lastName,
+          formData.dateOfBirth,
+          formData.gender,
+          formData.address,
+          formData.phone,
+          formData.email,
+          formData.department
+        ]
+      );
+      alert('Patient registered successfully!');
+      setFormData({
+        firstName: '',
+        lastName: '',
+        dateOfBirth: '',
+        gender: '',
+        address: '',
+        phone: '',
+        email: '',
+        department: ''
+      });
     }
-  };
+  } catch (err) {
+    console.error('Form submission error:', err);
+    alert(`Operation failed: ${err.message}`);
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <div className="card">
@@ -235,9 +248,36 @@ export default function PatientForm({ patient }) {
               onChange={handleChange}
             />
           </div>
+
+          <div className="form-group">
+            <label>Department</label>
+            <select
+              name="department"
+              value={formData.department}
+              onChange={handleChange}
+            >
+              <option value="">Select Department</option>
+              <option value="Cardiology">Cardiology</option>
+              <option value="General Medicine">General Medicine</option>
+              <option value="Dermatology">Dermatology</option>
+              <option value="Neurology">Neurology</option>
+              <option value="Psychiatry">Psychiatry</option>
+              <option value="Pulmonology">Pulmonology</option>
+              <option value="ENT">ENT</option>
+              <option value="Gastroenterology">Gastroenterology</option>
+              <option value="General Surgery">General Surgery</option>
+              <option value="Gynaecology">Gynaecology</option>
+              <option value="Dentistry">Dentistry</option>
+              <option value="Paediatrics">Paediatrics</option>
+              <option value="Orthopedics">Orthopedics</option>
+              <option value="Ophthalmology">Ophthalmology</option>
+            </select>
+          </div>
         </div>
         
-        <button type="submit" disabled={loading || errors.phone || errors.dateOfBirth}>
+        <button type="submit" disabled={loading || errors.phone || errors.dateOfBirth}
+        onClick={() => navigate('/register', { state: null })}
+        >
           {loading ? (
             <>
               <i className="fas fa-spinner fa-spin"></i> Processing...

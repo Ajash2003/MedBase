@@ -17,6 +17,7 @@ export async function initDB() {
         address TEXT,
         phone TEXT CHECK (phone IS NULL OR (LENGTH(phone) = 10 AND phone ~ '^\\d+$')),
         email TEXT,
+        department TEXT,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
     `);

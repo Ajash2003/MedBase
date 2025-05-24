@@ -26,7 +26,6 @@
   to { opacity: 1; transform: translateY(0); }
 }
 
-/* Form styles */
 .form-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -64,7 +63,6 @@
   box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.2);
 }
 
-/* Table styles */
 table {
   width: 100%;
   border-collapse: collapse;
@@ -87,7 +85,6 @@ tr:hover {
   background-color: #f8f9fa;
 }
 
-/* Query interface styles */
 .query-container {
   display: flex;
   flex-direction: column;
@@ -120,7 +117,6 @@ tr:hover {
   overflow-x: auto;
 }
 
-/* Status messages */
 .loading, .error, .error-message {
   padding: 1rem;
   border-radius: 8px;
@@ -141,7 +137,6 @@ tr:hover {
   margin-right: 0.5rem;
 }
 
-/* Responsive tables */
 @media (max-width: 768px) {
   table {
     display: block;

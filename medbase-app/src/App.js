@@ -5,8 +5,15 @@ import RegistrationPage from './pages/RegistrationPage';
 import DatabasePage from './pages/DatabasePage';
 import QueryPage from './pages/QueryPage';
 import './App.css';
+import { initDB } from './db';
+import {  useEffect } from 'react';
+
+
 
 function App() {
+  useEffect(() => {
+    initDB().catch(console.error);
+  }, []);
   return (
     <div className="app-container">
       <Sidebar />

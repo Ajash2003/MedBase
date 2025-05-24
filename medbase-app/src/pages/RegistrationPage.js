@@ -5,13 +5,12 @@ export default function RegistrationPage() {
   const location = useLocation();
   const patient = location.state?.patient;
 
-
   return (
-    <div className="registration-page">
+    <div className="page-container">
       <div className="page-header">
         <h1 className="page-title">
           <i className="fas fa-user-plus"></i> 
-          {patient ? 'Edit Patient Details' : 'Register Patient'}
+          {patient ? 'Edit Patient' : 'Register Patient'}
         </h1>
       </div>
       <PatientForm patient={patient} />

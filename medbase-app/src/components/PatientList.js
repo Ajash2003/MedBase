@@ -8,6 +8,7 @@ export default function PatientList() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedPatient, setSelectedPatient] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -50,95 +51,192 @@ export default function PatientList() {
     setSelectedPatient(selectedPatient?.id === patient.id ? null : patient);
   };
 
+  const filteredPatients = patients.filter(patient => {
+    const searchLower = searchTerm.toLowerCase();
+    return (
+      patient.first_name.toLowerCase().includes(searchLower) ||
+      patient.last_name.toLowerCase().includes(searchLower) ||
+      patient.phone?.includes(searchTerm) ||
+      patient.email?.toLowerCase().includes(searchLower) ||
+      patient.id.toString().includes(searchTerm)
+    );
+  });
+
   if (loading) return <div className="loading">Loading patients...</div>;
   if (error) return <div className="error">{error}</div>;
 
   return (
     <div className="patient-database">
-      <table>
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Name</th>
-            <th>Date of Birth</th>
-            <th>Gender</th>
-            <th>Contact</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {patients.map(patient => (
-            <>
-              <tr 
-                key={patient.id} 
-                onClick={() => handleRowClick(patient)}
-                className={selectedPatient?.id === patient.id ? 'selected' : ''}
-              >
-                <td>{patient.id}</td>
-                <td>{patient.first_name} {patient.last_name}</td>
-                <td>{new Date(patient.date_of_birth).toLocaleDateString()}</td>
-                <td>{patient.gender}</td>
-                <td>
-                  {patient.phone && <div><i className="fas fa-phone"></i> {patient.phone}</div>}
-                  {patient.email && <div><i className="fas fa-envelope"></i> {patient.email}</div>}
-                </td>
-                <td className="actions">
-                  <button 
-                    className="edit-btn"
-                    onClick={(e) => handleEdit(patient, e)}
-                  >
-                    <i className="fas fa-edit"></i> 
-                  </button>
-                  &nbsp;
-                  <button 
-                    className="delete-btn"
-                    onClick={(e) => handleDelete(patient.id, e)}
-                  >
-                    <i className="fas fa-trash-alt"></i> 
-                  </button>
-                </td>
+      <div className="search-container">
+        <i className="fas fa-search"></i>
+        <input
+          type="text"
+          placeholder="Search patients..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+        />
+      </div>
+
+      {filteredPatients.length > 0 ? (
+        <>
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Date of Birth</th>
+                <th>Gender</th>
+                <th>Contact</th>
+                <th>Department</th>
               </tr>
-              {selectedPatient?.id === patient.id && (
-                <tr className="details-row">
-                  <td colSpan="6">
-                    <div className="patient-details">
-                      <h3>Patient Details</h3>
-                      <div className="details-grid">
-                        <div>
-                          <strong>ID:</strong> {patient.id}
+            </thead>
+            <tbody>
+              {filteredPatients.map(patient => (
+                <>
+                  <tr 
+                    key={patient.id} 
+                    onClick={() => handleRowClick(patient)}
+                    className={selectedPatient?.id === patient.id ? 'selected' : ''}
+                  >
+                    <td>{patient.id}</td>
+                    <td>{patient.first_name} {patient.last_name}</td>
+                    <td>{new Date(patient.date_of_birth).toLocaleDateString()}</td>
+                    <td>{patient.gender}</td>
+                    <td>
+                      {patient.phone && <div><i className="fas fa-phone"></i> {patient.phone}</div>}
+                      {patient.email && <div><i className="fas fa-envelope"></i> {patient.email}</div>}
+                    </td>
+                    <td>{patient.department || '-'}</td>
+                    {/* <td className="actions">
+                      <button 
+                        className="edit-btn"
+                        onClick={(e) => handleEdit(patient, e)}
+                      >
+                        <i className="fas fa-edit"></i> 
+                      </button>
+                      &nbsp;
+                      <button 
+                        className="delete-btn"
+                        onClick={(e) => handleDelete(patient.id, e)}
+                      >
+                        <i className="fas fa-trash-alt"></i> 
+                      </button>
+                    </td> */}
+                  </tr>
+                  {selectedPatient?.id === patient.id && (
+                    <div className="modal-overlay" onClick={() => setSelectedPatient(null)}>
+                      <div className="patient-details-card" onClick={e => e.stopPropagation()}>
+                        <button 
+                          className="close-btn"
+                          onClick={() => setSelectedPatient(null)}
+                        >
+                          <i className="fas fa-times"></i>
+                        </button>
+                
+                        <div className="card-header">
+                          <h2>
+                            <i className="fas fa-user"></i> Patient Details
+                          </h2>
                         </div>
-                        <div>
-                          <strong>Full Name:</strong> {patient.first_name} {patient.last_name}
-                        </div>
-                        <div>
-                          <strong>Date of Birth:</strong> {new Date(patient.date_of_birth).toLocaleDateString()}
-                        </div>
-                        <div>
-                          <strong>Gender:</strong> {patient.gender}
-                        </div>
-                        {patient.address && (
-                          <div>
-                            <strong>Address:</strong> {patient.address}
+                
+                        <div className="card-body">
+                          <div className="detail-row">
+                            <span className="detail-label">Full Name:</span>
+                            <span className="detail-value">
+                              {selectedPatient.first_name} {selectedPatient.last_name}
+                            </span>
                           </div>
-                        )}
-                        <div>
-                          <strong>Phone:</strong> {patient.phone || 'N/A'}
-                        </div>
-                        <div>
-                          <strong>Email:</strong> {patient.email || 'N/A'}
-                        </div>
-                        <div>
-                          <strong>Registered On:</strong> {new Date(patient.created_at).toLocaleString()}
+
+                          <div className="detail-row">
+                            <span className="detail-label">Date of Birth:</span>
+                            <span className="detail-value">
+                              {new Date(selectedPatient.date_of_birth).toLocaleDateString()}
+                            </span>
+                          </div>
+                  
+                          <div className="detail-row">
+                            <span className="detail-label">Age:</span>
+                            <span className="detail-value">
+                              {Math.floor((new Date() - new Date(selectedPatient.date_of_birth)) / (365.25 * 24 * 60 * 60 * 1000))} years
+                            </span>
+                          </div>
+                  
+                          <div className="detail-row">
+                            <span className="detail-label">Gender:</span>
+                            <span className="detail-value">
+                              {selectedPatient.gender}
+                            </span>
+                          </div>
+                  
+                          {selectedPatient.address && (
+                            <div className="detail-row">
+                              <span className="detail-label">Address:</span>
+                              <span className="detail-value">
+                                {selectedPatient.address}
+                              </span>
+                            </div>
+                          )}
+                  
+                          <div className="detail-row">
+                            <span className="detail-label">Phone:</span>
+                            <span className="detail-value">
+                              {selectedPatient.phone || 'Not provided'}
+                            </span>
+                          </div>
+                  
+                          <div className="detail-row">
+                            <span className="detail-label">Email:</span>
+                            <span className="detail-value">
+                              {selectedPatient.email || 'Not provided'}
+                            </span>
+                          </div>
+                  
+                          <div className="detail-row">
+                            <span className="detail-label">Department:</span>
+                            <span className="detail-value">
+                              {selectedPatient.department || 'Not specified'}
+                            </span>
+                          </div>
+                          
+                          <div className="detail-row">
+                            <span className="detail-label">Registered On:</span>
+                            <span className="detail-value">
+                              {new Date(selectedPatient.created_at).toLocaleString()}
+                            </span>
+                          </div>
+                          <br></br>
+                          <div className="action-buttons">
+                            <button 
+                              className="edit-btn"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleEdit(selectedPatient, e);
+                              }}
+                            >
+                              <i className="fas fa-edit"></i> 
+                            </button>
+                            &nbsp;
+                            <button 
+                              className="delete-btn"
+                              onClick={(e) => handleDelete(patient.id, e)}
+                            >
+                              <i className="fas fa-trash-alt"></i> 
+                            </button>
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </td>
-                </tr>
-              )}
-            </>
-          ))}
-        </tbody>
-      </table>
+                  )}
+                </>
+              ))}
+            </tbody>
+          </table>
+        </>
+      ) : (
+        <div className="no-results">
+          No patients found matching your search
+        </div>
+      )}
     </div>
   );
 }
