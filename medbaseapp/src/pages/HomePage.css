@@ -37,7 +37,7 @@
 }
 
 .primary-btn, .secondary-btn {
-  padding: 0.8rem 1.5rem;
+  padding: 0.8rem 0.8rem;
   border-radius: 8px;
   font-size: 1rem;
   cursor:pointer;
