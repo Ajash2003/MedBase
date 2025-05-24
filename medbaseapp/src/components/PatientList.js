@@ -14,12 +14,11 @@ export default function PatientList() {
   useEffect(() => {
     fetchPatients();
     
-    // Setup cross-tab synchronization
     const unsubscribe = onDBChange(({ operation, data }) => {
       if (operation === 'DELETE') {
         setPatients(prev => prev.filter(p => p.id !== data.id));
       } else if (operation === 'INSERT' || operation === 'UPDATE') {
-        fetchPatients(); // Refresh the full list for simplicity
+        fetchPatients(); 
       }
     });
 
@@ -44,10 +43,7 @@ export default function PatientList() {
     if (!window.confirm('Are you sure you want to delete this patient?')) return;
     
     try {
-      // Pass true as third parameter to indicate this is a write operation
       await queryDB('DELETE FROM patients WHERE id = $1', [id], true);
-      
-      // Local state update (will also be updated via the broadcast channel)
       setPatients(prev => prev.filter(p => p.id !== id));
       if (selectedPatient?.id === id) setSelectedPatient(null);
     } catch (err) {
@@ -121,21 +117,6 @@ export default function PatientList() {
                       {patient.email && <div><i className="fas fa-envelope"></i> {patient.email}</div>}
                     </td>
                     <td>{patient.department || '-'}</td>
-                    {/* <td className="actions">
-                      <button 
-                        className="edit-btn"
-                        onClick={(e) => handleEdit(patient, e)}
-                      >
-                        <i className="fas fa-edit"></i> 
-                      </button>
-                      &nbsp;
-                      <button 
-                        className="delete-btn"
-                        onClick={(e) => handleDelete(patient.id, e)}
-                      >
-                        <i className="fas fa-trash-alt"></i> 
-                      </button>
-                    </td> */}
                   </tr>
                   {selectedPatient?.id === patient.id && (
                     <div className="modal-overlay" onClick={() => setSelectedPatient(null)}>

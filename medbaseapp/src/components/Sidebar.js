@@ -48,9 +48,6 @@ export default function Sidebar() {
           {!collapsed && <span>SQL Query</span>}
         </NavLink>
       </nav>
-      {/* <div className="sidebar-footer">
-        {!collapsed && <p>Arijeet Jash</p>}
-      </div> */}
     </aside>
   );
 }

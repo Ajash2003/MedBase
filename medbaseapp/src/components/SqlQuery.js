@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { queryDB } from '../db';
-import './SqlQuery.css'; // We'll create this CSS file
+import './SqlQuery.css'; 
 
 export default function SqlQuery() {
   const [sql, setSql] = useState('');
@@ -22,7 +22,6 @@ export default function SqlQuery() {
     }
   };
 
-  // Function to format date strings for display
   const formatDate = (dateString) => {
     if (!dateString) return '';
     try {

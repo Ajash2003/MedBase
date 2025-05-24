@@ -3,7 +3,7 @@ import { queryDB } from '../db';
 import { useNavigate } from 'react-router-dom';
 
 
-export default function PatientForm({ patient, onSuccess }) {  // Add onSuccess prop
+export default function PatientForm({ patient, onSuccess }) { 
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -76,7 +76,6 @@ export default function PatientForm({ patient, onSuccess }) {  // Add onSuccess 
   const handleSubmit = async (e) => {
   e.preventDefault();
   
-  // Validate inputs
   const phoneError = validatePhone(formData.phone);
   const dateError = validateDate(formData.dateOfBirth);
   
@@ -92,7 +91,6 @@ export default function PatientForm({ patient, onSuccess }) {  // Add onSuccess 
   
   try {
     if (patient) {
-      // Debug log before update
       console.log('Updating patient with data:', formData);
       
       await queryDB(
@@ -120,7 +118,6 @@ export default function PatientForm({ patient, onSuccess }) {  // Add onSuccess 
       );
       alert('Patient updated successfully!');
     } else {
-      // Debug log before insert
       console.log('Inserting new patient with data:', formData);
       
       await queryDB(
