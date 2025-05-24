@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { queryDB } from '../db';
+import { queryDB, onDBChange } from '../db';
 import './PatientList.css';
 
 export default function PatientList() {
@@ -13,6 +13,17 @@ export default function PatientList() {
 
   useEffect(() => {
     fetchPatients();
+    
+    // Setup cross-tab synchronization
+    const unsubscribe = onDBChange(({ operation, data }) => {
+      if (operation === 'DELETE') {
+        setPatients(prev => prev.filter(p => p.id !== data.id));
+      } else if (operation === 'INSERT' || operation === 'UPDATE') {
+        fetchPatients(); // Refresh the full list for simplicity
+      }
+    });
+
+    return () => unsubscribe();
   }, []);
 
   const fetchPatients = async () => {
@@ -33,8 +44,11 @@ export default function PatientList() {
     if (!window.confirm('Are you sure you want to delete this patient?')) return;
     
     try {
-      await queryDB('DELETE FROM patients WHERE id = $1', [id]);
-      fetchPatients();
+      // Pass true as third parameter to indicate this is a write operation
+      await queryDB('DELETE FROM patients WHERE id = $1', [id], true);
+      
+      // Local state update (will also be updated via the broadcast channel)
+      setPatients(prev => prev.filter(p => p.id !== id));
       if (selectedPatient?.id === id) setSelectedPatient(null);
     } catch (err) {
       alert('Failed to delete patient');

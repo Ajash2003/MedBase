@@ -5,6 +5,9 @@ const db = new PGlite('idb://patient-registration-db', {
   relaxedDurability: true
 });
 
+// Create a broadcast channel for cross-tab communication
+const broadcastChannel = new BroadcastChannel('patient-db-updates');
+
 export async function initDB() {
   try {
     await db.query(`
@@ -28,7 +31,7 @@ export async function initDB() {
   }
 }
 
-export async function queryDB(sql, params = []) {
+export async function queryDB(sql, params = [], isWriteOperation = false) {
   try {
     // Validate phone number for INSERT/UPDATE operations
     if (sql.includes('patients') && (sql.includes('INSERT') || sql.includes('UPDATE'))) {
@@ -39,9 +42,31 @@ export async function queryDB(sql, params = []) {
     }
 
     const result = await db.query(sql, params);
+    
+    // Broadcast changes for write operations
+    if (isWriteOperation) {
+      broadcastChannel.postMessage({
+        type: 'db-change',
+        operation: sql.trim().split(' ')[0].toUpperCase(), // INSERT, UPDATE, DELETE
+        table: 'patients',
+        data: result.rows[0] || { id: params[0] } // For DELETE, we send the ID
+      });
+    }
+    
     return result;
   } catch (err) {
     console.error("Database query failed:", err);
     throw err;
   }
+}
+
+// Add this new export for listening to changes
+export function onDBChange(callback) {
+  const handler = (event) => {
+    if (event.data.type === 'db-change') {
+      callback(event.data);
+    }
+  };
+  broadcastChannel.addEventListener('message', handler);
+  return () => broadcastChannel.removeEventListener('message', handler);
 }
