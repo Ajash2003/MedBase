@@ -1,8 +1,6 @@
 Medbase is a real-time Patient Management System built with React and PGlite (PostgreSQL in IndexedDB). It allows seamless CRUD operations with cross-tab synchronization, ensuring data consistency. Features include search, filtering, and responsive UI.
 
-Setup and Usage Instructions
-
----
+## Setup Instructions
 
 1. # Prerequisites
 
@@ -19,11 +17,11 @@ cd medbaseapp
 
 ## Install dependencies:
 
-npm install
+npm install react-router-dom
+npm install @electric-sql/pglite
 
 ## Set up the database
 
-npm install @electric-sql/pglite
 The app uses PGlite (PostgreSQL in IndexedDB).
 No external database setup is needed.
 

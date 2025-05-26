@@ -281,7 +281,7 @@ export default function PatientForm({ patient, onSuccess }) {
             </>
           ) : (
             <>
-              <i className="fas fa-save"></i> {patient ? 'Update Patient' : 'Register Patient'}
+              <i className="fas fa-save"></i> {patient ? 'Update Patient Details' : 'Register Patient'}
             </>
           )}
         </button>

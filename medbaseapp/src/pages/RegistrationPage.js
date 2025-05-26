@@ -10,7 +10,7 @@ export default function RegistrationPage() {
       <div className="page-header">
         <h1 className="page-title">
           <i className="fas fa-user-plus"></i> 
-          {patient ? 'Edit Patient' : 'Register Patient'}
+          {patient ? 'Edit Patient Details' : 'Register New Patient'}
         </h1>
       </div>
       <PatientForm patient={patient} />
